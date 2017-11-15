@@ -1,0 +1,160 @@
+---
+title: "MultipleFileImport"
+author: "Rob Donald"
+date: "`r format(Sys.time(), '%A %d %B %Y, %H:%M')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+params:
+  dataprep: true
+header-includes: \usepackage{comment}
+---
+<style>
+pre {
+  overflow-x: auto;
+}
+pre code {
+  word-wrap: normal;
+  white-space: pre;
+}
+</style>
+
+
+# Introduction
+
+I am often asked if I can combine a number of .csv files into one file.
+This project shows some examples and some of the problems.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.height=8,fig.width=12)
+options(width=1500)
+```
+
+# Cross platform operation
+
+Demo the techniques I use to cope with Windows support.
+
+```{r system_setup, echo=FALSE}
+os.type<-Sys.info()[1]
+if(os.type == 'Windows'){TLC_Root<-'C:/PostDocStuff'}else{TLC_Root<-'/Users/rob/PostDocStuff/teaching/RStuff'}
+```
+
+# Conditional markdown text
+
+`r if(!params$dataprep) {"\\begin{comment}"}`
+## Libraries
+`r if(!params$dataprep) {"\\end{comment}"}`
+
+```{r library_setup,include=params$dataprep}
+suppressMessages({suppressWarnings({
+  library(dplyr)
+  library(tidyr)
+
+  library(ggplot2)
+  library(ggpmisc)
+  library(grid)
+  library(gridExtra)
+  
+  library(RobsRUtils)
+  library(futile.logger)
+  
+  library(data.table)
+})})
+```
+
+# Background
+
+This project contains several dummy .csv files
+
+## Data Source
+
+
+```{r}
+all.files <- dir(path = '.',pattern = '*.csv')
+all.files
+```
+
+# Reading a single column from each file
+
+See https://stackoverflow.com/questions/19743271/quicker-way-to-read-single-column-of-csv-file
+
+fread() is from the data.table package. The option data.table = FALSE makes it return a data.frame.
+
+fread() is supposed to be *very* fast. Not an issue in these examples but in real life it probably
+is something you should consider.
+
+```{r}
+
+num.files <- length(all.files)
+
+all.data.info <- NULL
+
+for(file.count in 1:num.files)
+{
+    file.to.read <- all.files[file.count]
+    
+    single.column <- fread(input = file.to.read,sep = ",", select = c("Status"),data.table = FALSE ) 
+    
+    FailCount <- length(single.column[single.column == 'F'])
+    PassCount <- length(single.column[single.column == 'P'])
+    
+    file.res <- data_frame(filename = file.to.read,FailCount,PassCount)
+    
+    if(is.null(all.data.info))
+    {
+      all.data.info <- file.res  
+    }
+    else
+    {
+      all.data.info <- bind_rows(all.data.info,file.res)  
+    }
+    
+}
+
+all.data.info
+```
+
+# Using lapply
+
+First we need the function that lapply will use
+
+```{r}
+GetFileColumn<-function(file.to.read)
+{
+    single.column <- fread(input = file.to.read,sep = ",", select = c("Status"),data.table = FALSE ) 
+    
+    FailCount <- length(single.column[single.column == 'F'])
+    PassCount <- length(single.column[single.column == 'P'])
+    
+    file.res <- data_frame(filename = file.to.read,FailCount,PassCount)
+    
+    return(file.res)
+}
+```
+
+Now use the function
+
+```{r}
+all.file.results <- lapply(all.files,GetFileColumn)
+class(all.file.results)
+all.file.results
+```
+This returns a list with each list element being a data_frame
+
+```{r}
+single.list.element <- all.file.results[[2]]
+single.list.element
+class(single.list.element)
+```
+
+What you probably want is a single data_frame with each row being a result from a single file.
+Luckily the data.table package has a function called rbindlist() which will do that.
+
+```{r}
+all.file.results.df <- rbindlist(all.file.results)
+all.file.results.df
+```
+
+
