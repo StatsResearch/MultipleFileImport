@@ -170,6 +170,15 @@ all.file.results.df <- rbindlist(all.file.results)
 all.file.results.df
 ```
 
+## Export results
+We can now, of course, write these results out to a .csv file
+
+```{r}
+output.file <- 'ExportedResults.csv'
+write_csv(all.file.results.df,path = output.file)
+```
+
+
 # Using readr::read_csv
 
 Let's do the lapply() technique but use read_csv from the readr package. I would 
