@@ -69,12 +69,14 @@ suppressMessages({suppressWarnings({
 
 This project contains several dummy .csv files
 
+File: File_2_Date_02.csv has a duplicate column heading. The techniques seem to cope.
+
 ## Data Source
 
 Let's read in all the files.
 
 ```{r}
-all.files <- dir(path = '.',pattern = '*.csv')
+all.files <- dir(path = '.',pattern = 'File.*.csv')
 all.files
 ```
 
