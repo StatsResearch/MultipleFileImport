@@ -51,6 +51,7 @@ if(os.type == 'Windows'){TLC_Root<-'C:/PostDocStuff'}else{TLC_Root<-'/Users/rob/
 suppressMessages({suppressWarnings({
   library(dplyr)
   library(tidyr)
+  library(readr)
 
   library(ggplot2)
   library(ggpmisc)
@@ -70,6 +71,7 @@ This project contains several dummy .csv files
 
 ## Data Source
 
+Let's read in all the files.
 
 ```{r}
 all.files <- dir(path = '.',pattern = '*.csv')
@@ -80,13 +82,19 @@ all.files
 
 See https://stackoverflow.com/questions/19743271/quicker-way-to-read-single-column-of-csv-file
 
-fread() is from the data.table package. The option data.table = FALSE makes it return a data.frame.
+fread() is from the data.table package. 
 
 fread() is supposed to be *very* fast. Not an issue in these examples but in real life it probably
 is something you should consider.
 
-```{r}
+## Using a for() loop
 
+This is nice and easy to understand but not very efficient. In this example I'm reading the 
+single column 'Status'.
+
+In the fread() call, the option, data.table = FALSE, makes it return a data.frame rather than a data.table.
+
+```{r}
 num.files <- length(all.files)
 
 all.data.info <- NULL
@@ -116,9 +124,11 @@ for(file.count in 1:num.files)
 all.data.info
 ```
 
-# Using lapply
+## Using lapply
 
-First we need the function that lapply will use
+This is a vectorised operation and more in the R style.
+
+First we need the function that lapply() will use
 
 ```{r}
 GetFileColumn<-function(file.to.read)
@@ -134,14 +144,17 @@ GetFileColumn<-function(file.to.read)
 }
 ```
 
-Now use the function
+Now use the function. This is a one liner.
 
 ```{r}
 all.file.results <- lapply(all.files,GetFileColumn)
+
+
 class(all.file.results)
 all.file.results
 ```
-This returns a list with each list element being a data_frame
+This returns a list with each list element being a data_frame. Let's pick one out
+and have a look.
 
 ```{r}
 single.list.element <- all.file.results[[2]]
@@ -157,4 +170,30 @@ all.file.results.df <- rbindlist(all.file.results)
 all.file.results.df
 ```
 
+# Using readr::read_csv
+
+Let's do the lapply() technique but use read_csv from the readr package. I would 
+have thought this must be slower as it is reading *all* the columns then using select()
+to pick out the one you want. But is it easier to follow?
+
+```{r}
+GetSingleFileColumn<-function(file.to.read)
+{
+    raw.data <- read_csv(file = file.to.read) 
+    single.column <- select(raw.data,Status)
+    
+    FailCount <- length(single.column$Status[single.column$Status == 'F'])
+    PassCount <- length(single.column$Status[single.column$Status == 'P'])
+    
+    file.res <- data_frame(filename = file.to.read,FailCount,PassCount)
+    
+    return(file.res)
+}
+```
+
+```{r}
+all.file.results.2 <- lapply(all.files,GetSingleFileColumn)
+all.file.results.2.df <- rbindlist(all.file.results.2)
+all.file.results.2.df
+```
 
