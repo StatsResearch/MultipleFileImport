@@ -73,12 +73,20 @@ File: File_2_Date_02.csv has a duplicate column heading. The techniques seem to 
 
 ## Data Source
 
-Let's read in all the files.
+Let's read in all the files using the default settings for dir()
 
 ```{r}
 all.files <- dir(path = '.',pattern = 'File.*.csv')
 all.files
 ```
+
+# Digging deeper - recursive search
+
+```{r}
+all.files.recursive <- dir(path = '.',pattern = 'File.*.csv',  recursive = TRUE,include.dirs = TRUE)
+all.files.recursive
+```
+
 
 # Reading a single column from each file
 
