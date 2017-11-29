@@ -223,15 +223,19 @@ all.file.results.2.df
 We'll now create a large number of files and do some performance timing. I'll use the R package
 microbenchmark to do the timing.
 
+
+## Create the files
+
 ```{r}
 Big.data.dir <- paste0(TLC_Root,'/MultipleFileImport/BigDataDir')
 dir.create(Big.data.dir, showWarnings = FALSE)
 
+days <- rep(c('Mon','Tues','Weds','Thu','Fri'),2)
 units <- seq(1,10)
 tens <- seq(10,100,by=10)
-days <- rep(c('Mon','Tues','Weds','Thu','Fri'),2)
+status <- c('P','P','P','F','P','P','F','F','P','P')
 
-test.df <- data_frame(days,units,tens)
+test.df <- data_frame(days,units,tens,Status)
 
 num.test.files <- 100
 
@@ -259,5 +263,23 @@ We can easily sort it using the mixedsort() function from the R package gtools.
 ```{r}
 all.test.files <- mixedsort(all.test.files.raw)
 head(all.test.files,n=11)
+```
+
+
+
+
+
+## Clean up
+We'll now clean up. Notice a couple of things here:
+
++ The use of paste0() with a single string and a character vector. This has the effect of 'tacking' on the single string
+to each element of the character vector.
+
++ The use of status which confirms if the file removed worked.
+
+```{r}
+full.path.all.test.files <- paste0(Big.data.dir,'/',all.test.files)
+status <- file.remove(full.path.all.test.files)
+status
 ```
 
