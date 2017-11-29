@@ -49,19 +49,21 @@ if(os.type == 'Windows'){TLC_Root<-'C:/PostDocStuff'}else{TLC_Root<-'/Users/rob/
 
 ```{r library_setup,include=params$dataprep}
 suppressMessages({suppressWarnings({
-  library(dplyr)
-  library(tidyr)
-  library(readr)
-
-  library(ggplot2)
-  library(ggpmisc)
-  library(grid)
-  library(gridExtra)
-  
-  library(RobsRUtils)
-  library(futile.logger)
-  
-  library(data.table)
+    library(dplyr)
+    library(tidyr)
+    library(readr)
+    
+    library(ggplot2)
+    library(ggpmisc)
+    library(grid)
+    library(gridExtra)
+    
+    library(RobsRUtils)
+    library(futile.logger)
+    
+    library(data.table)
+    library(microbenchmark)
+    library(gtools)
 })})
 ```
 
@@ -214,5 +216,48 @@ GetSingleFileColumn<-function(file.to.read)
 all.file.results.2 <- lapply(all.files,GetSingleFileColumn)
 all.file.results.2.df <- rbindlist(all.file.results.2)
 all.file.results.2.df
+```
+
+# Performance Timing
+
+We'll now create a large number of files and do some performance timing. I'll use the R package
+microbenchmark to do the timing.
+
+```{r}
+Big.data.dir <- paste0(TLC_Root,'/MultipleFileImport/BigDataDir')
+dir.create(Big.data.dir, showWarnings = FALSE)
+
+units <- seq(1,10)
+tens <- seq(10,100,by=10)
+days <- rep(c('Mon','Tues','Weds','Thu','Fri'),2)
+
+test.df <- data_frame(days,units,tens)
+
+num.test.files <- 100
+
+for(count in 1:num.test.files)
+{
+    test.file.full.path <- paste0(Big.data.dir,'/','Test_Data_File_',count,'.csv') 
+    write_csv(test.df,path = test.file.full.path)
+}
+```
+
+Now let's 'discover' them with dir()
+
+```{r}
+all.test.files.raw <- dir(path = Big.data.dir)
+head(all.test.files.raw,n=10)
+```
+
+Note the tedious alphabetical ordering with the first three elements being 1,10,100.
+
+Have a look at this link for a good discussion.
+
+https://stackoverflow.com/questions/17531403/how-to-sort-a-character-vector-where-elements-contain-letters-and-numbers-in-r
+
+We can easily sort it using the mixedsort() function from the R package gtools.
+```{r}
+all.test.files <- mixedsort(all.test.files.raw)
+head(all.test.files,n=11)
 ```
 
