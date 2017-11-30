@@ -220,8 +220,7 @@ all.file.results.2.df
 
 # Performance Timing
 
-We'll now create a large number of files and do some performance timing. I'll use the R package
-microbenchmark to do the timing.
+We'll now create a large number of files and do some performance timing. I'll use the base R function Sys.time() to do the timing.
 
 
 ## Create the files
