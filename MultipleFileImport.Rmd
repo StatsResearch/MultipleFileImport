@@ -230,12 +230,12 @@ microbenchmark to do the timing.
 Big.data.dir <- paste0(TLC_Root,'/MultipleFileImport/BigDataDir')
 dir.create(Big.data.dir, showWarnings = FALSE)
 
-days <- rep(c('Mon','Tues','Weds','Thu','Fri'),2)
-units <- seq(1,10)
-tens <- seq(10,100,by=10)
-status <- c('P','P','P','F','P','P','F','F','P','P')
+Days <- rep(c('Mon','Tues','Weds','Thu','Fri'),2)
+Units <- seq(1,10)
+Tens <- seq(10,100,by=10)
+Status <- c('P','P','P','F','P','P','F','F','P','P')
 
-test.df <- data_frame(days,units,tens,Status)
+test.df <- data_frame(Days,Units,Tens,Status)
 
 num.test.files <- 100
 
@@ -265,6 +265,21 @@ all.test.files <- mixedsort(all.test.files.raw)
 head(all.test.files,n=11)
 ```
 
+
+
+```{r}
+full.path.all.test.files <- paste0(Big.data.dir,'/',all.test.files)
+
+start.time <- Sys.time()
+all.file.results.3 <- lapply(full.path.all.test.files,GetSingleFileColumn)
+
+all.file.results.3.df <- rbindlist(all.file.results.3)
+end.time <- Sys.time()
+elapsed <- (end.time - start.time)
+elapsed
+
+head(all.file.results.3.df)
+```
 
 
 
